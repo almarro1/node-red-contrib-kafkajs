@@ -81,58 +81,58 @@
 </script>
 
 <script type="text/javascript">
-    RED.nodes.registerType('kafkajs-consumer',{
-        category: 'kafka',
-        defaults: {
-            name: {value:""},
-            client: {type:"kafkajs-client"},
-            groupid: {value: "", require:false},
-            topic: {value: "", required:true},
-            advancedoptions: {value: false, require:true},
-            autocommitinterval: {value: 5000, required:true},
-            autocommitthreshold: {value: 100, required:true},
-            sessiontimeout: {value: 30000, required:true},
-            rebalancetimeout: {value: 60000, required:true},
-            heartbeatinterval: {value: 3000, required:true},
-            metadatamaxage: {value: 300000, required:true},
-            maxbytesperpartition: {value: 1048576, required:true},
-            minbytes: {value: 1, required:true},
-            maxbytes: {value: 10485760, required:true},
-            maxwaittimeinms: {value: 5000, required:true},
-            frombeginning: {value: false, required:true},
-            clearoffsets: {value: false, required:true},
-            allowautotopiccreation: {value:false, required:true}
-        },
-        inputs:0,
-        outputs:1,
-        align: "left",
-        icon: "publish.png",
-        label: function() {
-            return this.name||this._("kafkajs-consumer");
-        },
-        labelStyle: function() {
-            return "node_label_italic";
-        },
-        oneditprepare: function() {
-            function checkAdvancedOptions(checked){
-				if(checked){
-					$("#node-advancedoptions").show();
-				}
-				else{
-					$("#node-advancedoptions").hide();
-				}
-            }
-
-            checkAdvancedOptions($("#node-input-advancedoptions").val());
-            $('#node-input-advancedoptions').change(function(){
-				checkAdvancedOptions($(this).is(':checked'));
-            })
-        },
-        oneditsave: function() {
-
-        },
-        oneditresize: function(size) {
-
+  RED.nodes.registerType('kafkajs-consumer', {
+    category: 'kafka',
+    defaults: {
+      name: { value: "" },
+      client: { type: "kafkajs-client" },
+      groupid: { value: "", require: false },
+      topic: { value: "", required: true },
+      advancedoptions: { value: false, require: true },
+      autocommitinterval: { value: 5000, required: true },
+      autocommitthreshold: { value: 100, required: true },
+      sessiontimeout: { value: 30000, required: true },
+      rebalancetimeout: { value: 60000, required: true },
+      heartbeatinterval: { value: 3000, required: true },
+      metadatamaxage: { value: 300000, required: true },
+      maxbytesperpartition: { value: 1048576, required: true },
+      minbytes: { value: 1, required: true },
+      maxbytes: { value: 10485760, required: true },
+      maxwaittimeinms: { value: 5000, required: true },
+      frombeginning: { value: false, required: true },
+      clearoffsets: { value: false, required: true },
+      allowautotopiccreation: { value: false, required: true }
+    },
+    inputs: 0,
+    outputs: 1,
+    align: "left",
+    icon: "publish.png",
+    label: function () {
+      return this.name || this._("kafkajs-consumer");
+    },
+    labelStyle: function () {
+      return "node_label_italic";
+    },
+    oneditprepare: function () {
+      function checkAdvancedOptions(checked) {
+        if (checked) {
+          $("#node-advancedoptions").show();
         }
-    });
+        else {
+          $("#node-advancedoptions").hide();
+        }
+      }
+
+      checkAdvancedOptions($("#node-input-advancedoptions").val());
+      $('#node-input-advancedoptions').change(function () {
+        checkAdvancedOptions($(this).is(':checked'));
+      })
+    },
+    oneditsave: function () {
+
+    },
+    oneditresize: function (size) {
+
+    }
+  });
 </script>
