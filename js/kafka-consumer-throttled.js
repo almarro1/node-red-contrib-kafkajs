@@ -12,6 +12,11 @@ module.exports = function (RED) {
       return;
     }
 
+    // buffer to store received messages
+    let messageBuffer = [];
+    const unackMessages = new Set();
+    let paused = false; // flag to determine if the consumer is paused
+
     const kafka = new Kafka(client.options)
 
     const consumerOptions = new Object();
@@ -39,6 +44,11 @@ module.exports = function (RED) {
       runOptions.autoCommitThreshold = config.autocommitthreshold;
     }
 
+    node.onError = function (e) {
+      node.error("Kafka Consumer Error", e.message);
+      node.status({ fill: "red", shape: "ring", text: "Error" });
+    }
+
     node.init = async function init() {
       if (config.advancedoptions && config.clearoffsets) {
         node.status({ fill: "yellow", shape: "ring", text: "Clearing Offset" });
@@ -47,6 +57,10 @@ module.exports = function (RED) {
         await admin.resetOffsets({ groupId: config.groupid, topic: config.topic });
         await admin.disconnect()
       }
+
+      messageBuffer = [];
+      unackMessages.clear();
+      paused = false;
 
       node.consumer = kafka.consumer(consumerOptions);
       node.status({ fill: "yellow", shape: "ring", text: "Initializing" });
@@ -64,9 +78,42 @@ module.exports = function (RED) {
         node.status({ fill: "red", shape: "ring", text: "Timeout" });
       }
 
-      node.onError = function (e) {
-        node.error("Kafka Consumer Error", e.message);
-        node.status({ fill: "red", shape: "ring", text: "Error" });
+      node.pause = function () {
+        node.log(`Pausing execution for topic: ${config.topic}`);
+        node.consumer.pause([{ topic: config.topic }]);
+        node.status({ fill: 'yellow', shape: 'dot', text: 'Paused' });
+        paused = true;
+      }
+
+      node.resume = function () {
+        if (paused) {
+          node.consumer.resume([{ topic: config.topic }]);
+          node.debug(`Resuming subscription on topic ${config.topic}`);
+
+          node.status({ fill: 'green', shape: 'dot', text: 'Reading' });
+          paused = false;
+        }
+      }
+
+      node.releaseMessage = function () {
+        if (messageBuffer.length > 0) {
+          const message = messageBuffer.shift(); // take the first element in the buffer
+          node.send(message);
+          unackMessages.add(message._msgid);
+
+        }
+        if (unackMessages.size < config.maxbuffersize * config.bufferresumethreshold) {
+          node.resume();
+        }
+        node.status({ fill: paused ? 'yellow' : 'green', shape: 'dot', text: `${paused ? 'Paused' : 'Reading'} (Buf:${100 * messageBuffer.length / config.maxbuffersize}%, UnACK:${unackMessages.size})` })
+      }
+      node.queue = function (msg) {
+        //console.log(msg)
+        messageBuffer.push(msg);
+        // console.log(`Message queued ${messageBuffer.length}/${config.maxbuffersize}`)
+        if (unackMessages.size >= config.maxbuffersize) {
+          node.pause();
+        }
       }
 
       node.onMessage = function (topic, partition, message) {
@@ -78,6 +125,8 @@ module.exports = function (RED) {
         payload.payload = new Object();
         payload.payload = message;
 
+        payload._msgid = uuidv4();
+
         payload.payload.key = message.key ? message.key.toString() : null;
         payload.payload.value = message.value.toString();
 
@@ -85,8 +134,10 @@ module.exports = function (RED) {
           payload.payload.headers[key] = value.toString();
         }
 
-        node.send(payload);
-        node.status({ fill: "blue", shape: "ring", text: "Reading" });
+        //node.send(payload);
+        //node.status({ fill: "blue", shape: "ring", text: "Reading" });
+        node.queue(payload);
+        node.releaseMessage();
       }
 
       function checkLastMessageTime() {
@@ -116,6 +167,7 @@ module.exports = function (RED) {
     }
 
     node.init().catch(e => {
+      node.error(e)
       node.onError(e);
     });
 
@@ -128,6 +180,20 @@ module.exports = function (RED) {
         node.onError(e);
       });
     });
+
+    node.on('input', function (msg) {
+      if (msg.tick) {
+        if (unackMessages.delete(msg.tick)) {
+          node.releaseMessage();
+        }
+      }
+      // This should be used only for debugging purposes
+      if (msg.flush) {
+        messageBuffer = [];
+        unackMessages.clear();
+        node.resume();
+      }
+    })
   }
   RED.nodes.registerType("kafkajs-consumer-throttled", KafkajsConsumerNode);
 }
