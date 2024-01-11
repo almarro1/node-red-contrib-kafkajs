@@ -1,0 +1,129 @@
+[
+  {
+    "id": "d5ab515fdbd59ba3",
+    "type": "tab",
+    "label": "Flow 1",
+    "disabled": false,
+    "info": "",
+    "env": []
+  },
+  {
+    "id": "6cb90951f81aed0f",
+    "type": "kafkajs-consumer-throttled",
+    "z": "d5ab515fdbd59ba3",
+    "name": "",
+    "client": "c7466728935e1004",
+    "groupid": "nr-server-2",
+    "topic": "telemetry-calc-rich",
+    "advancedoptions": true,
+    "autocommitinterval": 5000,
+    "autocommitthreshold": 100,
+    "sessiontimeout": 30000,
+    "rebalancetimeout": 60000,
+    "heartbeatinterval": 3000,
+    "metadatamaxage": 300000,
+    "maxbytesperpartition": "1024",
+    "minbytes": 1,
+    "maxbytes": "1024",
+    "maxwaittimeinms": 5000,
+    "frombeginning": false,
+    "clearoffsets": true,
+    "allowautotopiccreation": false,
+    "maxbuffersize": "20",
+    "bufferresumethreshold": 0.8,
+    "x": 140,
+    "y": 260,
+    "wires": [
+      [
+        "39cdc4c23bed746a"
+      ]
+    ]
+  },
+  {
+    "id": "39cdc4c23bed746a",
+    "type": "delay",
+    "z": "d5ab515fdbd59ba3",
+    "name": "",
+    "pauseType": "random",
+    "timeout": "5",
+    "timeoutUnits": "seconds",
+    "rate": "1",
+    "nbRateUnits": "1",
+    "rateUnits": "second",
+    "randomFirst": "4",
+    "randomLast": "11",
+    "randomUnits": "seconds",
+    "drop": false,
+    "allowrate": false,
+    "outputs": 1,
+    "x": 360,
+    "y": 260,
+    "wires": [
+      [
+        "b6ee880b2cad653a"
+      ]
+    ]
+  },
+  {
+    "id": "b6ee880b2cad653a",
+    "type": "function",
+    "z": "d5ab515fdbd59ba3",
+    "name": "ack Message",
+    "func": "msg.tick = msg._msgid;\nreturn msg;",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 550,
+    "y": 260,
+    "wires": [
+      [
+        "6cb90951f81aed0f",
+        "b1f78d0e5af7f3ee"
+      ]
+    ]
+  },
+  {
+    "id": "b1f78d0e5af7f3ee",
+    "type": "debug",
+    "z": "d5ab515fdbd59ba3",
+    "name": "debug 1",
+    "active": false,
+    "tosidebar": true,
+    "console": false,
+    "tostatus": false,
+    "complete": "_msgid",
+    "targetType": "msg",
+    "statusVal": "",
+    "statusType": "auto",
+    "x": 560,
+    "y": 140,
+    "wires": []
+  },
+  {
+    "id": "c7466728935e1004",
+    "type": "kafkajs-client",
+    "name": "",
+    "brokers": "localhost:9092",
+    "clientid": "test-client",
+    "connectiontimeout": "3000",
+    "requesttimeout": "25000",
+    "advancedretry": true,
+    "maxretrytime": "30000",
+    "initialretrytime": "300",
+    "factor": "0.2",
+    "multiplier": "2",
+    "retries": "5",
+    "auth": "none",
+    "tlsselfsign": false,
+    "tlscacert": "",
+    "tlsclientcert": "",
+    "tlsprivatekey": "",
+    "tlspassphrase": "",
+    "saslssl": true,
+    "saslmechanism": "plain",
+    "loglevel": "error"
+  }
+]
