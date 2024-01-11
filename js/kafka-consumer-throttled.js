@@ -78,6 +78,7 @@ module.exports = function (RED) {
         node.status({ fill: "red", shape: "ring", text: "Timeout" });
       }
 
+      // helper function that pauses the reception of messages from the broker
       node.pause = function () {
         node.log(`Pausing execution for topic: ${config.topic}`);
         node.consumer.pause([{ topic: config.topic }]);
@@ -85,6 +86,7 @@ module.exports = function (RED) {
         paused = true;
       }
 
+      // helper function that resumes the reception of messages from the broker
       node.resume = function () {
         if (paused) {
           node.consumer.resume([{ topic: config.topic }]);
@@ -95,18 +97,20 @@ module.exports = function (RED) {
         }
       }
 
+      // function that sends a message to upstream nodes
       node.releaseMessage = function () {
         if (messageBuffer.length > 0) {
           const message = messageBuffer.shift(); // take the first element in the buffer
           node.send(message);
           unackMessages.add(message._msgid);
-
         }
         if (unackMessages.size < config.maxbuffersize * config.bufferresumethreshold) {
           node.resume();
         }
         node.status({ fill: paused ? 'yellow' : 'green', shape: 'dot', text: `${paused ? 'Paused' : 'Reading'} (Buf:${100 * messageBuffer.length / config.maxbuffersize}%, UnACK:${unackMessages.size})` })
       }
+
+      // adds a message to the send queue and checks if the reception should be paused
       node.queue = function (msg) {
         //console.log(msg)
         messageBuffer.push(msg);
@@ -134,8 +138,6 @@ module.exports = function (RED) {
           payload.payload.headers[key] = value.toString();
         }
 
-        //node.send(payload);
-        //node.status({ fill: "blue", shape: "ring", text: "Reading" });
         node.queue(payload);
         node.releaseMessage();
       }
