@@ -1,5 +1,5 @@
 {
-  "name": "@prodevelop/node-red-kafkajs-throttled",
+  "name": "@prodevelop/kafkajs-throttled",
   "node-red": {
     "nodes": {
       "kafka-consumer": "./js/kafka-consumer.js",
